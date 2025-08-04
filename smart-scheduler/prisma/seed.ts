@@ -10,7 +10,7 @@ async function main() {
       clerkId: 'test_clerk_id',
       email: 'test@example.com',
       name: 'Test User',
-      timezone: 'UTC',
+      timezone: 'America/Denver',
       // Add default availability for weekdays (Mon-Fri)
       availabilities: {
         create: Array.from({ length: 5 }, (_, i) => ({

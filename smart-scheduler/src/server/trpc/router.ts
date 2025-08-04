@@ -36,15 +36,15 @@ const getSlots = t.procedure
     ]);
 
     const open = computeOpenSlots(
-      new Date(input.date + "T00:00:00Z"),
+      new Date(`${input.date}T00:00:00`), // Use local time instead of UTC
       rules.map((r) => ({
         weekday: r.weekday,
         startMin: r.startMin,
         endMin: r.endMin,
       })),
       bookings.map((b) => ({
-        startMin: differenceInMinutes(b.startUtc, start),
-        endMin: differenceInMinutes(b.endUtc, start),
+        startMin: differenceInMinutes(new Date(b.startUtc), start),
+        endMin: differenceInMinutes(new Date(b.endUtc), start),
       })),
       buffer?.minutes ?? 0
     );
@@ -63,16 +63,17 @@ const createBooking = t.procedure
   )
   .mutation(async ({ input }) => {
     const owner = await prisma.user.findFirstOrThrow();
-    const startUtc = toUtc(input.date, input.startMin);
-    const endUtc = toUtc(input.date, input.startMin + 30);
+    // Create dates in MST (owner's timezone)
+    const start = toUtc(input.date, input.startMin);
+    const end = toUtc(input.date, input.startMin + 30);
 
     await prisma.booking.create({
       data: {
         name: input.name,
         email: input.email,
         notes: input.notes,
-        startUtc,
-        endUtc,
+        startUtc: start,
+        endUtc: end,
         userId: owner.id,
       },
     });
@@ -86,8 +87,14 @@ const createBooking = t.procedure
       requestBody: {
         summary: `Meeting with ${input.name}`,
         description: input.notes ?? "",
-        start: { dateTime: startUtc.toISOString() },
-        end: { dateTime: endUtc.toISOString() },
+        start: { 
+          dateTime: start.toISOString(),
+          timeZone: 'America/Denver'  // Always use MST
+        },
+        end: { 
+          dateTime: end.toISOString(),
+          timeZone: 'America/Denver'  // Always use MST
+        },
       },
     });
 

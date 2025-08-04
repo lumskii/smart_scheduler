@@ -10,7 +10,7 @@ export function computeOpenSlots(
   buffer: number,                // minutes
   slotLength = 30
 ) {
-  const weekday = date.getUTCDay();
+  const weekday = date.getDay();
   const rule = rules.find(r => r.weekday === weekday);
   if (!rule) return [];
 
@@ -34,11 +34,13 @@ export function computeOpenSlots(
 }
 
 export function toUtc(dateISO: string, minutes: number) {
-  const base = new Date(dateISO + 'T00:00:00Z');
-  return addMinutes(base, minutes);
+  // Simply create the date in owner's timezone (MST)
+  const hours = Math.floor(minutes / 60);
+  const mins = minutes % 60;
+  return new Date(`${dateISO}T${String(hours).padStart(2, '0')}:${String(mins).padStart(2, '0')}:00`);
 }
 
 export function dayRange(dateISO: string) {
-  const d = new Date(dateISO + 'T00:00:00Z');
+  const d = new Date(`${dateISO}T00:00:00`);
   return { start: startOfDay(d), end: endOfDay(d) };
 }
