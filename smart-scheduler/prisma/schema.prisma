@@ -1,0 +1,48 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id             String         @id @default(cuid())
+  clerkId        String         @unique
+  email          String         @unique
+  name           String?
+  timezone       String         @default("UTC")
+  availabilities Availability[]
+  bookings       Booking[]
+  buffer         BufferSetting?
+}
+
+model Availability {
+  id       String @id @default(cuid())
+  userId   String
+  weekday  Int
+  startMin Int
+  endMin   Int
+  user     User   @relation(fields: [userId], references: [id])
+}
+
+model Booking {
+  id        String   @id @default(cuid())
+  userId    String
+  startUtc  DateTime
+  endUtc    DateTime
+  name      String
+  email     String
+  notes     String?
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id])
+}
+
+model BufferSetting {
+  id      String @id @default(cuid())
+  userId  String @unique
+  minutes Int    @default(15)
+  user    User   @relation(fields: [userId], references: [id])
+}
